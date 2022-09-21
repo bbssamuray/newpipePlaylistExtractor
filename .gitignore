@@ -1,0 +1,5 @@
+#For newpipe databases
+*.zip
+*.db
+#For outputs
+*.txt
