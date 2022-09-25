@@ -28,6 +28,7 @@ getPlaylistData(){
 	if [[ "$sourceName" == *.zip ]]
 	then
 
+		#Get database file from zip
 		echo "Getting newpipe.db from $sourceName."
 		tempDB=$(mktemp)
 		unzip -p "$sourceName" newpipe.db > "$tempDB" || (rm temp.db && exit 1)
@@ -58,7 +59,7 @@ helpMessage(){
 	echo "Extracts urls from Newpipe playlists."
 	echo "Accepts either the .zip obtained from the \"export database\" function in the settings menu or the newpipe.db inside of the zip."
 	echo
-	echo "Usage: playlistExtractor [-o] [database|zip name]"
+	echo "Usage: playlistExtractor [-o] [zip name|database]"
 	echo
 	echo "options:"
 	echo "-h    Print this help message."
@@ -81,23 +82,20 @@ main(){
          		exit 1;;
    		esac
 	done
-	if [[ "" || ! -f "newpipe.db" ]]     
-	then
-		echo "thats true"
-	fi
 
 	getPlaylistData "$1"
 
 	for (( i=0; i<${#playlistData[@]}; i++ ))
 	do
-		id=$(echo "${playlistData[$i]}" | cut -d "|" -f 1)
+		#Split query result into two pieces
+		id=$(echo "${playlistData[$i]}" | cut -d "|" -f 1) 
 		name=$(echo "${playlistData[$i]}" | cut -d "|" -f 2-)
 		echo "Getting $name..."
 		if [[ "$override" || ! -f "$name.txt" ]]
 		then
 			sqlite3 "$sourceName" "SELECT url || \" #\" || title FROM streams WHERE uid IN (SELECT stream_id FROM playlist_stream_join WHERE playlist_id == $id);" > "$name".txt
 		else
-			echo "$name.txt already exists, skipping."
+			echo "        $name.txt already exists, skipping."
 		fi
 	done
 		
